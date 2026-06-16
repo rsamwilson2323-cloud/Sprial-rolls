@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Infinity Spiral Trail</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #000008;
+    touch-action: none;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+onresize = resize;
+
+let spirals = [];
+let isTouching = false;
+let tx = 0, ty = 0;
+
+function addSpiral(x, y){
+  spirals.push({
+    x, y,
+    r: 5,
+    turns: 3 + Math.random()*2,
+    alpha: 1,
+    hue: Math.random()*360
+  });
+}
+
+// TOUCH events
+document.addEventListener("touchstart", e=>{
+  let t = e.touches[0];
+  tx = t.clientX;
+  ty = t.clientY;
+  isTouching = true;
+  addSpiral(tx, ty);
+});
+document.addEventListener("touchmove", e=>{
+  let t = e.touches[0];
+  tx = t.clientX;
+  ty = t.clientY;
+  isTouching = true;
+});
+document.addEventListener("touchend", ()=>isTouching=false);
+
+// MOUSE events
+document.addEventListener("mousedown", e=>{
+  tx = e.clientX;
+  ty = e.clientY;
+  isTouching = true;
+  addSpiral(tx, ty);
+});
+document.addEventListener("mousemove", e=>{
+  if(isTouching){
+    tx = e.clientX;
+    ty = e.clientY;
+  }
+});
+document.addEventListener("mouseup", ()=>isTouching=false);
+
+
+// DRAW a spiral (perfect smooth)
+function drawSpiral(s){
+  ctx.beginPath();
+
+  const steps = 250; // perfect smooth line
+
+  for(let i = 0; i <= steps; i++){
+    let p = i / steps;
+    let angle = p * Math.PI * 2 * s.turns;
+    let radius = s.r * p * 2;
+
+    let px = s.x + radius * Math.cos(angle);
+    let py = s.y + radius * Math.sin(angle);
+
+    if(i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+
+  ctx.strokeStyle = `hsla(${s.hue},100%,60%,${s.alpha})`;
+  ctx.lineWidth = 4;
+
+  ctx.shadowColor = `hsla(${s.hue},100%,60%,1)`;
+  ctx.shadowBlur = 20;
+
+  ctx.stroke();
+}
+
+
+// ANIMATION
+function animate(){
+  ctx.fillStyle = "rgba(0,0,20,0.2)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  if(isTouching) addSpiral(tx, ty);
+
+  spirals.forEach((s,i)=>{
+    drawSpiral(s);
+
+    s.r += 1.7;
+    s.alpha -= 0.015;
+    s.hue += 1.2;
+
+    if(s.alpha <= 0) spirals.splice(i,1);
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
